@@ -14,7 +14,9 @@ defmodule Poeticoins.Product do
     }
   end
 
-  # def coinbase(currency_pair) do
-  #   new(:coinbase, currency_pair)
-  # end
+  defimpl String.Chars do
+    def to_string(product) do
+      product.exchange_name <> ":" <> product.currency_pair
+    end
+  end
 end

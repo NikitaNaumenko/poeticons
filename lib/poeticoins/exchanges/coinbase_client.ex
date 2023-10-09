@@ -12,26 +12,19 @@ defmodule Poeticoins.Exchanges.CoinbaseClient do
 
   @behaviour Client
 
-  # @impl Client
-  # def exchange_name(), do: "coinbase"
-  #
-  # @impl Client
-  # def server_host(), do: ~c"ws-feed.exchange.coinbase.com"
-  #
-  # @impl Client
-  # def server_port(), do: 443
-
   @impl Client
-  # def handle_ws_message(%{"type" => "ticker"} = msg, state) do
-  #   _trade = message_to_trade(msg) |> IO.inspect(label: "coinbase")
-  #   {:noreply, state}
-  # end
-  #
-  # def handle_ws_message(msg, state) do
-  #   IO.inspect(msg, label: "unhandled message")
-  #   {:noreply, state}
-  # end
-  #
+  def handle_ws_message(%{"type" => "ticker"} = msg, state) do
+    {:ok, trade} = message_to_trade(msg)
+    Poeticoins.Exchanges.broadcast(trade)
+
+    {:noreply, state}
+  end
+
+  def handle_ws_message(msg, state) do
+    IO.inspect(msg, label: "unhandled message")
+    {:noreply, state}
+  end
+
   @impl Client
   def subscription_frames(currency_pairs) do
     msg =
@@ -51,12 +44,13 @@ defmodule Poeticoins.Exchanges.CoinbaseClient do
          {:ok, traded_at, _} <- DateTime.from_iso8601(msg["time"]) do
       currency_pair = msg["product_id"]
 
-      Trade.new(
-        product: Product.new(exchange_name(), currency_pair),
-        price: msg["price"],
-        volume: msg["last_size"],
-        traded_at: traded_at
-      )
+      {:ok,
+       Trade.new(
+         product: Product.new(exchange_name(), currency_pair),
+         price: msg["price"],
+         volume: msg["last_size"],
+         traded_at: traded_at
+       )}
     else
       {:error, _reason} = error -> error
     end
