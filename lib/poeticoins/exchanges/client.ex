@@ -9,7 +9,7 @@ defmodule Poeticoins.Exchanges.Client do
           currency_pairs: [String.t()]
         }
 
-  @callback exchange_name() :: String.t()
+  @callback exchange_name() :: string()
   @callback server_host() :: list()
   @callback server_port() :: integer()
   @callback subscription_frames([String.t()]) :: [{:text, String.t()}]
